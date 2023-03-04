@@ -23,16 +23,18 @@ struct Client {
 };
 
 int main() {
-	Client clients[5];
+	Client clients[2];
 
-	for (int i = 0; i < 5; ++i) {
-		clients[i] = {
-			(double) i,
-			{
-				{(char) (65 + i)}, {(char) (97 + i)},
-			},
-		};
-		std::cout << clients[i] << std::endl;
+//	 input of the clients information
+	for (auto &client : clients) {
+		std::cout << "Client " << &client - clients + 1 << std::endl;
+		std::cout << "First name: ";
+		std::cin >> client.person.firstName;
+		std::cout << "Last name: ";
+		std::cin >> client.person.lastName;
+		std::cout << "Money: ";
+		std::cin >> client.money;
+		std::cout << std::endl;
 	}
 
 	double sum = 0;
