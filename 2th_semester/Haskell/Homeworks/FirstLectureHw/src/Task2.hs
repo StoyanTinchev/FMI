@@ -1,12 +1,11 @@
 module Task2
-  (
-    sumCubesPow,
+  ( sumCubesPow,
     sumCubesNoPow,
   )
- where
+where
 
 sumCubesPow :: Integer -> Integer -> Integer
-sumCubesPow a b = sum [x ^ (3 :: Int) | x <- [a, b]]
-  
+sumCubesPow a b = a ^ (3 :: Int) + b ^ (3 :: Int)
+
 sumCubesNoPow :: Integer -> Integer -> Integer
-sumCubesNoPow a b = sum [x * x * x | x <- [a, b]]
+sumCubesNoPow a b = a * a * a + b * b * b

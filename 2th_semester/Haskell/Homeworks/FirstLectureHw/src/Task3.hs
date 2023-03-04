@@ -4,4 +4,4 @@ module Task3
 where
   
 sqAvg :: Integer -> Integer -> Double
-sqAvg a b = fromIntegral (sum [x * x | x <- [a, b]]) / 2
+sqAvg a b = fromIntegral (a * a + b * b) / 2
