@@ -3,10 +3,10 @@ module Task9
   )
 where
 
-rev :: Integer -> Integer
+rev :: Int -> Int
 rev num = helper num 0
   where
-    helper :: Integer -> Integer -> Integer
+    helper :: Int -> Int -> Int
     helper currNum newNum
       | mod currNum 10 == 0 = newNum
       | otherwise = helper (div currNum 10) (10 * newNum + mod currNum 10)

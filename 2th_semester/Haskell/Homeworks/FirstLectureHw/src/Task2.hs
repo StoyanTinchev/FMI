@@ -4,8 +4,8 @@ module Task2
   )
 where
 
-sumCubesPow :: Integer -> Integer -> Integer
-sumCubesPow a b = a ^ (3 :: Int) + b ^ (3 :: Int)
+sumCubesPow :: Int -> Int -> Int
+sumCubesPow x y = x^3 + y^3
 
-sumCubesNoPow :: Integer -> Integer -> Integer
-sumCubesNoPow a b = a * a * a + b * b * b
+sumCubesNoPow :: Int -> Int -> Int
+sumCubesNoPow x y = x * x * x + y * y * y

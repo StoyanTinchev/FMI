@@ -845,3 +845,8 @@ pip-selfcheck.json
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,flutter,macos,magento,magento1,magento2,swift,android,visualstudiocode,c++,haskell,clion+all,virtualenv,python,pycharm+iml
 n
+
+
+
+# Personal excluded files:
+github_exclude

@@ -3,9 +3,11 @@ module Task4
     myGcdPM,
   )
 where
-  
+
 myGcdG :: Int -> Int -> Int
-myGcdG x y = if y == 0 then x else myGcdG y (x `mod` y)
+myGcdG x y
+  | y == 0 = x
+  | otherwise = myGcdG y (mod x y)
 
 -- with pattern matching
 myGcdPM :: Int -> Int -> Int

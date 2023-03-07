@@ -3,5 +3,5 @@ module Task3
   )
 where
   
-sqAvg :: Integer -> Integer -> Double
-sqAvg a b = fromIntegral (a * a + b * b) / 2
+sqAvg :: Int -> Int -> Double
+sqAvg x y = fromIntegral (x * x + y * y) / 2
