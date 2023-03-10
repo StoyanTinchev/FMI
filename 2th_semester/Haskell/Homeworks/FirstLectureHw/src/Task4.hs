@@ -12,4 +12,4 @@ myGcdG x y
 -- with pattern matching
 myGcdPM :: Int -> Int -> Int
 myGcdPM x 0 = x
-myGcdPM x y = myGcdPM y (x `mod` y)
+myGcdPM x y = myGcdPM y (mod x y)

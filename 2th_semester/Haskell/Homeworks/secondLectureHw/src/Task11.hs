@@ -7,8 +7,8 @@ isPrime :: Int -> Bool
 isPrime num = helper (num - 1)
   where
     helper :: Int -> Bool
+    helper 1 = True
     helper prime
-      | prime == 1 = True
       | mod num prime == 0 = False
       | otherwise = helper $ prime - 1
       

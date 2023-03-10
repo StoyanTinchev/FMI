@@ -12,9 +12,10 @@ isPalindrome number = helper number 0
 -- (end + 1) and (start + 1) as start of the range because first number of the range
 -- is excluded
 countPalindromes :: Int -> Int -> Int
-countPalindromes start end
-  | start > end = helper (end + 1) start 0
-  | otherwise = helper (start + 1) end 0
+-- make the below two lines as one line
+--  | start > end = helper (end + 1) start 0
+--  | otherwise = helper (start + 1) end 0
+countPalindromes start end = helper (min start end + 1) (max start end) 0
     where
       helper s e count
         | s == e = count
