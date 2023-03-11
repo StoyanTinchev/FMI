@@ -4,11 +4,11 @@ module Task4
 where
 
 countOccurences :: Int -> Int -> Int
-countOccurences num occ = helper num 0
+countOccurences num occ
+  | num == occ = 1
+  | otherwise = helper num 0
   where
-    helper 0 sum
-      | occ == 0 = 1
-      | otherwise = sum
+    helper 0 sum = sum
     helper n sum
       | mod n 10 == occ = helper (div n 10) (sum + 1)
       | otherwise = helper (div n 10) sum
