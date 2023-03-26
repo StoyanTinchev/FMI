@@ -3,7 +3,7 @@
 # Function to replace "x ^ y" with "x^y" in a Haskell file
 format_exponentiation() {
     local file="$1"
-    sed -i '' -E 's/([0-9a-zA-Z_]+) *\^ *([0-9a-zA-Z_]+)/\1^\2/g' "$file"
+    sed -i '' -E 's/([(]*[-0-9a-zA-Z_]+[)]*) *\^ *([(]*[-0-9a-zA-Z_()\\+*\/]+[)]*)/\1^\2/g' "$file"
 }
 
 # Find all Haskell source files that are staged for commit
@@ -18,7 +18,7 @@ fi
 echo "Haskell files staged for commit:"
 echo "$files"
 
-ormolu_exe="/Users/with/.cabal/bin/ormolu" # Replace this with the path to the ormolu executable if not in your PATH
+ormolu_exe="/Users/with/.cabal/bin/ormolu"
 
 # Reformat Haskell files with ormolu and apply the custom exponentiation formatting
 for file in $files; do
