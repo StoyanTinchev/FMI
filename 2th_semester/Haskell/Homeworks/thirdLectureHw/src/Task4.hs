@@ -5,7 +5,7 @@ module Task4 (sumDivisibleNumbers) where
 --  [start, finish] whose digits sum up to a number that
 --  is evenly divisible by k.
 sumDivisibleNumbers :: Int -> Int -> Int -> Int
-sumDivisibleNumbers a b k = helper (min a b) (max a b)
+sumDivisibleNumbers x y k = helper (min x y) (max x y)
   where
     helper :: Int -> Int -> Int
     helper start finish
@@ -13,7 +13,6 @@ sumDivisibleNumbers a b k = helper (min a b) (max a b)
       | mod start k == 0 = start + helper (start + 1) finish
       | otherwise = helper (start + 1) finish
 
-
---print $ sumDivisibleNumbers 0 10 5 -- == 5
+-- print $ sumDivisibleNumbers 0 10 5 -- == 5
 --  print $ sumDivisibleNumbers 0 100 5 -- == 990
 --  print $ sumDivisibleNumbers 100 0 5 -- == 990
