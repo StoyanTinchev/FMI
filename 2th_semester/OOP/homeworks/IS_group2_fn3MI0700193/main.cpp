@@ -6,13 +6,14 @@ int main() {
 	char command[128];
 	while (true) {
 		std::cout << "> ";
+		std::cout.flush();
 		std::cin >> command;
 
 		if (strcmp(command, "create-user") == 0) {
 			char name[128];
 			double investment;
 			std::cin >> name >> investment;
-			oopCoin.createUser(0, name, investment); // Use system OopCoin ID (0) as the creator
+			oopCoin.createUser(0, name, investment); // Use system user ID (0) as the creator
 
 		} else if (strcmp(command, "remove-user") == 0) {
 			char name[128];
@@ -30,10 +31,14 @@ int main() {
 			std::cout << "Transactions are " << (valid ? "valid" : "invalid") << std::endl;
 
 		} else if (strcmp(command, "wealthiest-users") == 0) {
-			oopCoin.wealthiestUsers();
+			int countEntries;
+			std::cin >> countEntries;
+			oopCoin.wealthiestUsers(countEntries);
 
 		} else if (strcmp(command, "biggest-blocks") == 0) {
-			oopCoin.biggestBlocks();
+			int countEntries;
+			std::cin >> countEntries;
+			oopCoin.biggestBlocks(countEntries);
 
 		} else if (strcmp(command, "exit") == 0) {
 			break;

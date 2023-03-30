@@ -24,7 +24,6 @@ void OOPCoin::createUser(unsigned int creatorId, const char *name, double invest
 
 	addUser(newUser);
 	sendCoins(systemUserId, newUser.id, investment * 420);
-	std::cout << "User " << newUser.name << " created with id " << newUser.id << std::endl;
 }
 
 void OOPCoin::removeUser(const char *name) {
@@ -36,30 +35,37 @@ void OOPCoin::removeUser(const char *name) {
 		}
 	}
 
-	if (userIdx != -1) {
-		sendCoins(users[userIdx].id, 0, getBalance(users[userIdx].id));
-		for (int i = userIdx; i < usersSize - 1; i++) {
-			users[i] = users[i + 1];
-		}
-		usersSize--;
+	if (userIdx == -1) {
+		std::cerr << "User " << name << " does not exist." << std::endl;
+		return;
 	}
+
+	sendCoins(users[userIdx].id, 0, getBalance(users[userIdx].id));
+	for (int i = userIdx; i < usersSize - 1; i++) {
+		users[i] = users[i + 1];
+	}
+	usersSize--;
 }
 
 void OOPCoin::sendCoins(unsigned int senderId, unsigned int receiverId, double coins) {
+	double senderBalance = getBalance(senderId);
 	if (senderId == receiverId && senderId != 0) {
 		std::cerr << "Sender and receiver cannot be the same." << std::endl;
 		return;
+
 	} else if (coins <= 0) {
 		std::cerr << "Coins must be positive." << std::endl;
 		return;
-	} else if (senderId != 0 && (getBalance(senderId) - coins) < coins) {
+
+	} else if (senderId != 0 && (senderBalance - coins) < coins) {
 		std::cerr << "Sender does not have enough coins." << std::endl;
 		return;
-	} else if (senderId == 0 && (getBalance(senderId) - coins) < 0) {
-		std::cerr << "oopCoins are not infinite. User created with only the left over coins: "
-		          << getBalance(senderId) << "." << std::endl;
 
-		Transaction transaction{senderId, receiverId, getBalance(senderId)};
+	} else if ((senderId == 0 && receiverId != 0) && (senderBalance - coins) < 0) {
+		std::cerr << "oopCoins are not infinite. User created with only the left over coins: "
+		          << senderBalance << "." << std::endl;
+
+		Transaction transaction{senderId, receiverId, senderBalance};
 		addTransaction(transaction);
 		return;
 	}
@@ -81,25 +87,30 @@ bool OOPCoin::verifyTransactions() {
 	return true;
 }
 
-void OOPCoin::wealthiestUsers() {
+void OOPCoin::wealthiestUsers(unsigned countEntries) {
 	const unsigned usersSizeWithoutSystemUser = usersSize - 1;
-	if (usersSizeWithoutSystemUser == 0) {
-		std::cerr << "There are no users to show." << std::endl;
+	if (countEntries > usersSize) {
+		countEntries = usersSizeWithoutSystemUser;
+	}
+
+	if (countEntries == 0) {
+		std::cerr << "There aren't users to show." << std::endl;
 		return;
 	}
 
 	struct UserBalance {
 		User *user;
 		double balance;
-	} userBalances[usersSizeWithoutSystemUser];
+	} userBalances[countEntries];
 
-	for (int i = 1; i < usersSize; i++) {
+	// i = 1 because system user is excluded
+	for (int i = 1; i <= countEntries; i++) {
 		userBalances[i - 1].user = &users[i];
 		userBalances[i - 1].balance = getBalance(users[i].id);
 	}
 
-	for (int i = 0; i < usersSizeWithoutSystemUser - 1; i++) {
-		for (int j = 0; j < usersSizeWithoutSystemUser - i - 1; j++) {
+	for (int i = 0; i < countEntries - 1; i++) {
+		for (int j = 0; j < countEntries - i - 1; j++) {
 			if (userBalances[j].balance < userBalances[j + 1].balance) {
 				UserBalance temp = userBalances[j];
 				userBalances[j] = userBalances[j + 1];
@@ -113,7 +124,7 @@ void OOPCoin::wealthiestUsers() {
 
 	FILE *file = fopen(fileName, "w");
 
-	for (int i = 0; i < usersSizeWithoutSystemUser; i++) {
+	for (int i = 0; i < countEntries; i++) {
 		std::cout << userBalances[i].user->name << " " << userBalances[i].balance << std::endl;
 		fprintf(file, "%s, %lf\n", userBalances[i].user->name, userBalances[i].balance);
 	}
@@ -121,13 +132,17 @@ void OOPCoin::wealthiestUsers() {
 	fclose(file);
 }
 
-void OOPCoin::biggestBlocks() {
+void OOPCoin::biggestBlocks(unsigned countEntries) {
+	if (countEntries > blocksSize) {
+		countEntries = blocksSize;
+	}
+
 	struct BlockAmount {
 		unsigned id;
 		double balance;
-	} blockAmounts[blocksSize];
+	} blockAmounts[countEntries];
 
-	for (int i = 0; i < blocksSize; i++) {
+	for (int i = 0; i < countEntries; i++) {
 		blockAmounts[i].id = blocks[i].id;
 		blockAmounts[i].balance = 0;
 
@@ -136,8 +151,8 @@ void OOPCoin::biggestBlocks() {
 		}
 	}
 
-	for (int i = 0; i < blocksSize - 1; i++) {
-		for (int j = 0; j < blocksSize - i - 1; j++) {
+	for (int i = 0; i < countEntries - 1; i++) {
+		for (int j = 0; j < countEntries - i - 1; j++) {
 			if (blockAmounts[j].balance < blockAmounts[j + 1].balance) {
 				BlockAmount temp = blockAmounts[j];
 				blockAmounts[j] = blockAmounts[j + 1];
@@ -151,7 +166,7 @@ void OOPCoin::biggestBlocks() {
 
 	FILE *file = fopen(fileName, "w");
 
-	for (int i = 0; i < blocksSize; i++) {
+	for (int i = 0; i < countEntries; i++) {
 		std::cout << blockAmounts[i].id << " " << blockAmounts[i].balance << std::endl;
 		fprintf(file, "%u, %lf\n", blockAmounts[i].id, blockAmounts[i].balance);
 	}

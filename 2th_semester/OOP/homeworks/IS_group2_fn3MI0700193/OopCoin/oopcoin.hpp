@@ -11,31 +11,35 @@ public:
 
 	~OOPCoin();
 
-	void createUser(unsigned creatorId, const char *name, double investment);
+	void createUser(unsigned, const char *, double);
 
-	void removeUser(const char *name);
+	void removeUser(const char *);
 
-	void sendCoins(unsigned senderId, unsigned receiverId, double coins);
+	void sendCoins(unsigned, unsigned, double);
 
 	bool verifyTransactions();
 
-	void wealthiestUsers();
+	void wealthiestUsers(unsigned);
 
-	void biggestBlocks();
+	void biggestBlocks(unsigned);
 
 private:
-	static unsigned computeHash(const unsigned char *memory, int length);
+	static unsigned computeHash(const unsigned char *, int);
 
 	struct User {
 		char name[128];
 		unsigned id;
 
+	private:
 		User() = default;
 
 		User(unsigned int id, const char *new_name) : id(id) {
 			strncpy(name, new_name, sizeof(name) - 1);
 			name[sizeof(name) - 1] = '\0';
 		}
+
+	public:
+		friend class OOPCoin;
 	} *users;
 
 	struct Transaction {
@@ -75,13 +79,13 @@ private:
 	const unsigned systemUserId = 0;
 	unsigned nextUserId = 0;
 
-	void addUser(const User &user);
+	void addUser(const User &);
 
-	void addTransactionBlock(const TransactionBlock &block);
+	void addTransactionBlock(const TransactionBlock &);
 
-	double getBalance(unsigned userId);
+	double getBalance(unsigned);
 
-	void addTransaction(const Transaction &transaction);
+	void addTransaction(const Transaction &);
 
 	void loadData();
 
