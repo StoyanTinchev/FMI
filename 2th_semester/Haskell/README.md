@@ -1,2 +1,2 @@
-# FP 3MI0700193 Stoyan Tinchev
-Haskell
+# FP 3MI0700193
+### Haskell
