@@ -14,7 +14,7 @@ eqSumPowDig hMax power
           | otherwise = helper num 0
           where
             helper 0 sum = sum
-            helper curr sum = helper (div curr 10) (sum + mod curr 10 ^ power)
+            helper curr sum = helper (div curr 10) (sum + mod curr 10^power)
 
 -- |
 -- The following function, eqSumPowDig, is commented out because its usage
@@ -47,7 +47,7 @@ eqSumPowDig hMax power
 --
 --  3. If 'shiftR' is odd (i.e., mod shiftR 2 == 1), it means that the current power of 7
 --     should be included in the sum. So, the helper function is called
---     recursively with (div shiftR 2), (power + 1), and (sum + 7 ^ power).
+--     recursively with (div shiftR 2), (power + 1), and (sum + 7^power).
 --
 --  4. If 'shiftR' is even (i.e., mod shiftR 2 == 0), it means that the current power of 7
 --     should not be included in the sum. So, the helper function is called
@@ -65,8 +65,17 @@ getNthSevenlikeNum num
   where
     helper 0 _ sum = sum
     helper shiftR power sum
-      | mod shiftR 2 == 1 = helper (div shiftR 2) (power + 1) (sum + 7 ^ power)
+      | mod shiftR 2 == 1 = helper (div shiftR 2) (power + 1) (sum + 7^power)
       | otherwise = helper (div shiftR 2) (power + 1) sum
+
+isSevenlikeNum :: Int -> Bool
+isSevenlikeNum num = helper num 0
+  where
+    helper :: Int -> Int -> Bool
+    helper currNum currPower
+      | mod currNum (7^currPower) == 0 = (div currNum (7^currPower) == 1) || helper currNum (currPower + 1)
+      | mod (currNum - (7^(currPower - 1))) (7^currPower) == 0 = (div (currNum - (7^(currPower - 1))) (7^currPower) == 1) || helper (currNum - (7^(currPower - 1))) (currPower + 1)
+      | otherwise = False
 
 main :: IO ()
 main = do
