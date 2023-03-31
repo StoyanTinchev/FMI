@@ -1,5 +1,40 @@
 #!/usr/bin/env bash
 
+
+###############################################################################################################################
+# Function to edit .md files in Haskell project
+#!/bin/sh
+
+# Change the directory below to the directory where you want the hook to apply
+TARGET_DIR="2th_semester/Haskell"
+
+# Get the list of modified .md files in the specified directory and its subdirectories
+MODIFIED_FILES=$(git diff --cached --name-only --diff-filter=d | grep -E "^$TARGET_DIR.*\.md$")
+
+# Add the specified lines to the beginning of each modified .md file
+for FILE in $MODIFIED_FILES; do
+    # Extract the directory name
+    DIRECTORY_NAME=$(basename $(dirname "$FILE"))
+
+    # Add the required lines at the top of the .md file
+    TEMP_FILE="$FILE.tmp"
+    echo "# FP 3MI0700193" > "$TEMP_FILE"
+    echo "### $DIRECTORY_NAME" >> "$TEMP_FILE"
+    cat "$FILE" >> "$TEMP_FILE"
+
+    # Replace the original .md file with the modified version
+    mv "$TEMP_FILE" "$FILE"
+
+    # Stage the modified .md file for commit
+    git add "$FILE"
+done
+###############################################################################################################################
+
+
+
+
+
+###############################################################################################################################
 # Function to replace "x ^ y" with "x^y" in a Haskell file
 format_exponentiation() {
     local file="$1"
@@ -32,3 +67,4 @@ done
 
 echo "All Haskell files reformatted successfully."
 exit 0
+###############################################################################################################################
