@@ -1,10 +1,16 @@
 #include "oopcoin.hpp"
 
+const char usersFileName[10] = "users.dat";
+
+const char blocksFileName[11] = "blocks.dat";
+
+const int oopCoins = 100000;
+
 OOPCoin::OOPCoin() {
 	loadData();
 
 	if (usersSize == 0) {
-		createUser(0, "System User", 100);
+		createUser(0, "System User", oopCoins);
 	}
 }
 
@@ -23,7 +29,7 @@ void OOPCoin::createUser(unsigned int creatorId, const char *name, double invest
 	User newUser{nextUserId, name};
 
 	addUser(newUser);
-	sendCoins(systemUserId, newUser.id, investment * 420);
+	sendCoins(systemUserId, newUser.id, BGN_TO_OOPCOINS(investment));
 }
 
 void OOPCoin::removeUser(const char *name) {
@@ -246,7 +252,7 @@ void OOPCoin::addTransaction(const OOPCoin::Transaction &transaction) {
 }
 
 void OOPCoin::loadData() {
-	FILE *usersFile = fopen("users.dat", "rb");
+	FILE *usersFile = fopen(usersFileName, "rb");
 	if (usersFile) {
 		fread(&usersSize, sizeof(int), 1, usersFile);
 		fread(&usersCapacity, sizeof(int), 1, usersFile);
@@ -260,7 +266,7 @@ void OOPCoin::loadData() {
 		users = new User[usersCapacity];
 	}
 
-	FILE *blocksFile = fopen("blocks.dat", "rb");
+	FILE *blocksFile = fopen(blocksFileName, "rb");
 	if (blocksFile) {
 		fread(&blocksSize, sizeof(int), 1, blocksFile);
 		fread(&blocksCapacity, sizeof(int), 1, blocksFile);
@@ -275,13 +281,13 @@ void OOPCoin::loadData() {
 }
 
 void OOPCoin::saveData() {
-	FILE *usersFile = fopen("users.dat", "wb");
+	FILE *usersFile = fopen(usersFileName, "wb");
 	fwrite(&usersSize, sizeof(int), 1, usersFile);
 	fwrite(&usersCapacity, sizeof(int), 1, usersFile);
 	fwrite(users, sizeof(User), usersSize, usersFile);
 	fclose(usersFile);
 
-	FILE *blocksFile = fopen("blocks.dat", "wb");
+	FILE *blocksFile = fopen(blocksFileName, "wb");
 	fwrite(&blocksSize, sizeof(int), 1, blocksFile);
 	fwrite(&blocksCapacity, sizeof(int), 1, blocksFile);
 	fwrite(blocks, sizeof(TransactionBlock), blocksSize, blocksFile);

@@ -5,6 +5,16 @@
 #include <algorithm>
 #include <cstring>
 
+#define OOPCOINS_PER_BGN 420.0
+#define OOPCOINS_TO_BGN(oopCoins) ((oopCoins) / OOPCOINS_PER_BGN)
+#define BGN_TO_OOPCOINS(bgn) ((bgn) * OOPCOINS_PER_BGN)
+
+extern const char usersFileName[10];
+
+extern const char blocksFileName[11];
+
+extern const int oopCoins;
+
 class OOPCoin {
 public:
 	OOPCoin();
