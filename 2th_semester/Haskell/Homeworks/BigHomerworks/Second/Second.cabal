@@ -4,14 +4,14 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 
-name:           5thLectureHw
+name:           Second
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/5thLectureHw#readme>
-homepage:       https://github.com/githubuser/5thLectureHw#readme
-bug-reports:    https://github.com/githubuser/5thLectureHw/issues
+description:    Please see the README on GitHub at <https://github.com/Github username here/Second#readme>
+homepage:       https://github.com/Github username here/Second#readme
+bug-reports:    https://github.com/Github username here/Second/issues
 author:         Author name here
-maintainer:     example@example.com
-copyright:      2023 Author name here
+maintainer:     Author email here
+copyright:      2019 Author name here
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -21,18 +21,11 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/5thLectureHw
+  location: https://github.com/Github username here/Second
 
 library
-  exposed-modules:
-      Task1
-      Task2
-      Task3
-      Task4
-      Task5
-      Task6
   other-modules:
-      Paths_5thLectureHw
+      Paths_Second
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
@@ -40,27 +33,27 @@ library
       base >=4.7 && <5
   default-language: Haskell2010
 
-executable 5thLectureHw-exe
+executable Second-exe
   main-is: Main.hs
   other-modules:
-      Paths_5thLectureHw
+      Paths_Second
   hs-source-dirs:
       app
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      5thLectureHw
+      Second
     , base >=4.7 && <5
   default-language: Haskell2010
 
-test-suite 5thLectureHw-test
+test-suite Second-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_5thLectureHw
+      Paths_Second
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      5thLectureHw
+      Second
     , base >=4.7 && <5
   default-language: Haskell2010

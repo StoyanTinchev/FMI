@@ -5,6 +5,7 @@ import Task2
 import Task3
 import Task4
 import Task5
+import Task6
 
 main = do
   print $ getPrimesLC 1 100 == [7, 17, 37, 47, 67, 71, 73, 79, 97]
@@ -38,3 +39,7 @@ main = do
   print $ (applyN (\x -> div x 10) 2) 100 == 1
 
   print "End of task 5"
+
+  print $ (pairCompose [(+ 1), (+ 2)]) 1 -- == 5 -- ((1 + 2) + 1) + 1
+  print $ (pairCompose [(+ 1), (+ 2), (+ 3)]) 1 -- == 8
+  print "End of task 6"
