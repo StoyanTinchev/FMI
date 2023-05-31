@@ -29,8 +29,6 @@ int main() {
     library->addEdition(comic1);
     library->addEdition(comic2);
 
-    library->displayEditions();
-
     User *user1 = new User("Pesho");
     User *user2 = new User("Gosho");
     User *user3 = new User("Tosho");
@@ -38,29 +36,34 @@ int main() {
     library->addUser(user2);
     library->addUser(user3);
 
+    library->saveToFile("editionsFile.dat", "usersFile.dat");
 
-    library->lendEdition("Pesho", book1->getLibraryNumber());
-    library->lendEdition("Gosho", periodical1->getLibraryNumber());
-    library->lendEdition("Tosho", comic1->getLibraryNumber());
+    delete library; // Delete old library to ensure data is actually loaded from the file
 
-    library->returnEdition("Pesho", book1->getLibraryNumber());
+    Library *newLibrary = new Library();
+    newLibrary->loadFromFile(
+            "/Users/with/Desktop/FMI/2th_semester/OOP/homeworks/Hw2Library/cmake-build-debug/editionsFile.dat",
+            "/Users/with/Desktop/FMI/2th_semester/OOP/homeworks/Hw2Library/cmake-build-debug/usersFile.dat");
 
+    newLibrary->lendEdition("Pesho", 1);
+    newLibrary->lendEdition("Gosho", 1);
+    newLibrary->lendEdition("Tosho", 3);
 
-    library->displayOverdueEditions();
+    newLibrary->returnEdition("Pesho", 1);
 
-    library->displayUsersWithBook(comic1->getLibraryNumber());
+    newLibrary->displayOverdueEditions();
 
-    library->displayUsersByReadCount();
+    newLibrary->displayUsersWithBook(1);
 
+    newLibrary->displayUsersByReadCount();
 
-    library->removeEdition(book2->getLibraryNumber());
-    library->removeEdition(comic2->getLibraryNumber());
+    newLibrary->removeEdition(2);
+    newLibrary->removeEdition(4);
 
-    library->displayEditions();
+    newLibrary->displayEditions();
 
+    newLibrary->removeUser("Tosho");
 
-    library->removeUser(user3->getName());
-
-    delete library;
+    delete newLibrary;
     return 0;
 }

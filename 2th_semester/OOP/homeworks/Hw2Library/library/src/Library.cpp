@@ -1,9 +1,11 @@
 #include "../include/Library.h"
 #include "../include/utility.h"
 #include "../include/print_editions/Periodical.h"
+#include "../include/print_editions/Book.h"
+#include "../include/print_editions/Comic.h"
 #include <iostream>
 
-Library::Library() {
+Library::Library() : editions(nullptr), users(nullptr) {
     this->editionsCount = 0;
     this->editionsCapacity = 4;
     this->editions = new PrintEdition *[this->editionsCapacity];
@@ -249,3 +251,115 @@ void Library::returnEdition(const char *userName, int libraryNumber) const {
     std::cout << "User " << user->getName() << " successfully returned " << edition->getTitle() << std::endl;
 }
 
+void Library::saveToFile(const char *editionsFileName, const char *usersFileName) {
+    std::ofstream editionsFile(editionsFileName, std::ios::binary | std::ios::out);
+
+    if (!editionsFile) {
+        std::cerr << "Couldn't open file for writing: " << editionsFileName << std::endl;
+        return;
+    }
+
+    // Save editions
+    for (int i = 0; i < editionsCount; i++) {
+        PrintEdition *edition = editions[i];
+        edition->serialize(editionsFile);
+    }
+
+    editionsFile.close();
+
+
+    std::ofstream usersFile(usersFileName, std::ios::binary | std::ios::out);
+
+    if (!usersFile) {
+        std::cerr << "Couldn't open file for writing: " << usersFileName << std::endl;
+        return;
+    }
+
+    // Save users
+    for (int i = 0; i < usersCount; i++) {
+        User *user = users[i];
+        user->serialize(usersFile);
+    }
+
+    usersFile.close();
+}
+
+
+void Library::loadFromFile(const char *editionsFileName, const char *usersFileName) {
+    std::ifstream editionsFile(editionsFileName, std::ios::binary | std::ios::in);
+
+    if (!editionsFile) {
+        std::cerr << "Couldn't open file for reading: " << editionsFileName << std::endl;
+        return;
+    }
+
+    // Clear current data
+    for (int i = 0; i < editionsCount; i++) {
+        delete editions[i];
+    }
+    editionsCount = 0;
+
+    for (int i = 0; i < usersCount; i++) {
+        delete users[i];
+    }
+    usersCount = 0;
+
+    // Load editions
+    while (!editionsFile.eof()) {
+        size_t typeLength;
+        editionsFile.read(reinterpret_cast<char *>(&typeLength), sizeof(typeLength));
+        char *type = new char[typeLength + 1];
+        editionsFile.read(type, typeLength);
+        type[typeLength] = '\0';
+        if (editionsFile.eof()) {
+            delete[] type;
+            break;
+        }
+
+        PrintEdition *edition = nullptr;
+
+        if (strcmp(type, "Book") == 0) {
+            edition = new Book();
+        } else if (strcmp(type, "Comic") == 0) {
+            edition = new Comic();
+        } else if (strcmp(type, "Periodical") == 0) {
+            edition = new Periodical();
+        }
+
+        if (edition) {
+            edition->deserialize(editionsFile);
+            addEdition(edition);
+        }
+        delete[] type;
+    }
+
+    editionsFile.close();
+
+
+    std::ifstream usersfile(usersFileName, std::ios::binary | std::ios::in);
+
+    if (!usersfile) {
+        std::cerr << "Couldn't open file for reading: " << usersFileName << std::endl;
+        return;
+    }
+
+    // Load users
+    while (!usersfile.eof()) {
+        User *user = new User();
+        user->deserialize(usersfile, *this);
+        if (usersfile.eof()) break;
+        addUser(user);
+    }
+
+    usersfile.close();
+}
+
+PrintEdition *Library::getPrintEditionByLibraryNumber(int libraryNumber) {
+    for (int i = 0; i < editionsCount; i++) {
+        if (editions[i]->getLibraryNumber() == libraryNumber) {
+            return editions[i];
+        }
+    }
+
+    return nullptr; // Return null if no edition with the given libraryNumber is found
+}

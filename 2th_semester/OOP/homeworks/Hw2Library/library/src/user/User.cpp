@@ -1,5 +1,8 @@
 #include "../../include/user/User.h"
 #include "../../include/utility.h"
+#include "../../include/Library.h"
+
+User::User() : name(nullptr) {}
 
 User::User(const char *name) {
     this->name = new char[strlen(name) + 1];
@@ -36,7 +39,7 @@ bool User::isOverdue(int loanIndex) const {
     return difference > (30 * 24 * 60 * 60); // More than 30 days
 }
 
-const Loan * User::getLoan(int idx) const {
+const Loan *User::getLoan(int idx) const {
     if (idx < 0 || idx >= this->currentlyReadingCount) {
         return nullptr;
     }
@@ -195,7 +198,7 @@ void User::erase() {
     delete[] this->read;
 }
 
-const char * User::getName() const {
+const char *User::getName() const {
     return name;
 }
 
@@ -213,3 +216,63 @@ std::ostream &operator<<(std::ostream &os, const User &user) {
 int User::getCurrentlyReadingCount() const {
     return currentlyReadingCount;
 }
+
+void User::serialize(std::ofstream &ofs) const {
+    size_t nameLength = strlen(name);
+    ofs.write(reinterpret_cast<const char *>(&nameLength), sizeof(nameLength));
+    ofs.write(name, nameLength);
+
+    ofs.write(reinterpret_cast<const char *>(&currentlyReadingCount), sizeof(currentlyReadingCount));
+    ofs.write(reinterpret_cast<const char *>(&readCount), sizeof(readCount));
+
+    for(int i = 0; i < currentlyReadingCount; i++) {
+        int libraryNumber = currentlyReading[i]->edition->getLibraryNumber();
+        ofs.write(reinterpret_cast<const char *>(&libraryNumber), sizeof(libraryNumber));
+
+        // Serialize the time as a long
+        time_t loanTime = mktime(&(currentlyReading[i]->loanDate));
+        ofs.write(reinterpret_cast<const char *>(&loanTime), sizeof(loanTime));
+    }
+
+    for(int i = 0; i < readCount; i++) {
+        int libraryNumber = read[i]->getLibraryNumber();
+        ofs.write(reinterpret_cast<const char *>(&libraryNumber), sizeof(libraryNumber));
+    }
+}
+
+void User::deserialize(std::ifstream &ifs, Library& library) {
+    size_t nameLength;
+    ifs.read(reinterpret_cast<char *>(&nameLength), sizeof(nameLength));
+
+    delete[] name;
+    name = new char[nameLength + 1];
+    ifs.read(name, nameLength);
+    name[nameLength] = '\0';
+
+    ifs.read(reinterpret_cast<char *>(&currentlyReadingCount), sizeof(currentlyReadingCount));
+    ifs.read(reinterpret_cast<char *>(&readCount), sizeof(readCount));
+
+    for(int i = 0; i < currentlyReadingCount; i++) {
+        int libraryNumber;
+        ifs.read(reinterpret_cast<char *>(&libraryNumber), sizeof(libraryNumber));
+
+        // Get the edition using the libraryNumber
+        PrintEdition* edition = library.getPrintEditionByLibraryNumber(libraryNumber);
+
+        // Deserialize the time as a long
+        time_t loanTime;
+        ifs.read(reinterpret_cast<char *>(&loanTime), sizeof(loanTime));
+
+        currentlyReading[i] = new Loan {edition, *localtime(&loanTime)};
+    }
+
+    for(int i = 0; i < readCount; i++) {
+        int libraryNumber;
+        ifs.read(reinterpret_cast<char *>(&libraryNumber), sizeof(libraryNumber));
+
+        // Get the edition using the libraryNumber
+        PrintEdition* edition = library.getPrintEditionByLibraryNumber(libraryNumber);
+        read[i] = edition;
+    }
+}
+
