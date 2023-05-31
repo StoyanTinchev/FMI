@@ -41,12 +41,11 @@ isSingleYearStudio studioName movies selectedYears =
     uniqueStudioYears = nub studioYears
 
 getStudios :: MovieDB -> ([Year] -> [(StudioName, Name)])
-getStudios (movieList, studioList, execList) =
-  \selectedYears ->
-    [ (studioName, getProducerName producerId execList)
-      | (studioName, producerId) <- studioList,
-        isSingleYearStudio studioName movieList selectedYears
-    ]
+getStudios (movieList, studioList, execList) selectedYears =
+  [ (studioName, getProducerName producerId execList)
+    | (studioName, producerId) <- studioList,
+      isSingleYearStudio studioName movieList selectedYears
+  ]
 
 -- #######################################################################################
 
