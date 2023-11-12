@@ -1,0 +1,3 @@
+Sound test_sound.bin 0.5
+Pause 50
+FadeInSong test_sound.bin 100 0.7

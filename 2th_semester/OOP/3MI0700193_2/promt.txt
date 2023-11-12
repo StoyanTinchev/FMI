@@ -1,0 +1,436 @@
+```Sound.h
+#ifndef OOPTEST_SOUND_H
+#define OOPTEST_SOUND_H
+
+#include <iostream>
+#include <fstream>
+#include <new>
+#include <cstring>
+#include <ctime>
+#include <cmath>
+#include <exception>
+#include <stdexcept>
+
+template<typename T, T M>
+class Sound {
+public:
+    virtual ~Sound() = default;
+
+    virtual T operator[](size_t i) const = 0;
+
+    virtual size_t length() const = 0;
+};
+
+template<typename T, T M>
+void Save(const Sound<T, M> &sound, const char* filename) {
+    std::ofstream output(filename, std::ios::binary);
+    for (size_t i = 0; i < sound.length(); ++i) {
+        T value = sound[i];
+        output.write(reinterpret_cast<const char *>(&value), sizeof(T));
+    }
+}
+
+
+#endif //OOPTEST_SOUND_H
+```
+```Silence.h
+#ifndef OOPTEST_SILENCE_H
+#define OOPTEST_SILENCE_H
+
+#include "Sound.h"
+
+template<typename T, T M>
+class Silence : public Sound<T, M> {
+public:
+    Silence(size_t length) : _length(length) {}
+
+    T operator[](size_t i) const override { return 0; }
+
+    size_t length() const override { return _length; }
+
+private:
+    size_t _length;
+};
+
+#endif //OOPTEST_SILENCE_H
+```
+```SoundFromFile.h
+#ifndef OOPTEST_SOUNDFROMFILE_H
+#define OOPTEST_SOUNDFROMFILE_H
+
+#include "Sound.h"
+
+template<typename T, T M>
+class SoundFromFile : public Sound<T, M> {
+public:
+    SoundFromFile(const char *filename) {
+        std::ifstream input(filename, std::ios::binary);
+        if (!input.is_open()) {
+            throw std::runtime_error("Cannot open the file!");
+        }
+
+        input.seekg(0, std::ios::end);
+        _length = input.tellg() / sizeof(T);
+        input.seekg(0, std::ios::beg);
+
+        _samples = new(std::nothrow) T[_length];
+        if (!_samples) {
+            throw std::runtime_error("Cannot allocate memory!");
+        }
+
+        input.read(reinterpret_cast<char *>(_samples), _length * sizeof(T));
+
+        if (!input) {
+            delete[] _samples;
+            throw std::runtime_error("Cannot read the file!");
+        }
+    };
+
+    SoundFromFile(T *samples, size_t length) : _samples(samples), _length(length) {}
+
+    ~SoundFromFile() override {
+        delete[] _samples;
+    };
+
+    T operator[](size_t i) const override {
+        return _samples[i];
+    };
+
+    size_t length() const override {
+        return _length;
+    };
+
+private:
+    T *_samples;
+    size_t _length;
+};
+
+#endif //OOPTEST_SOUNDFROMFILE_H
+```
+```PeriodicSound.h
+#ifndef OOPTEST_PERIODICSOUND_H
+#define OOPTEST_PERIODICSOUND_H
+
+#include "Sound.h"
+
+template<typename T, T M>
+class PeriodicSound : public Sound<T, M> {
+public:
+    PeriodicSound(const T *pattern, size_t pattern_length, size_t repeat) : _pattern(
+            new(std::nothrow) T[pattern_length]), _pattern_length(pattern_length), _repeat(repeat) {
+        if (!_pattern) {
+            throw std::runtime_error("Cannot allocate memory!");
+        }
+        std::copy(pattern, pattern + pattern_length, _pattern);
+    };
+
+    ~PeriodicSound() override {
+        delete[] _pattern;
+    };
+
+    T operator[](size_t i) const override {
+        return _pattern[i % _pattern_length];
+    };
+
+    size_t length() const override {
+        return _pattern_length * _repeat;
+    };
+
+private:
+    T *_pattern;
+    size_t _pattern_length;
+    size_t _repeat;
+};
+
+#endif //OOPTEST_PERIODICSOUND_H
+```
+```Mix.h
+#ifndef OOPTEST_MIX_H
+#define OOPTEST_MIX_H
+
+#include "Sound.h"
+
+template<typename T, T M>
+class Mix : public Sound<T, M> {
+public:
+    Mix(Sound<T, M> *const *sounds, size_t sound_count) : _sounds(new(std::nothrow) Sound<T, M> *[sound_count]),
+                                                          _sound_count(sound_count) {
+        if (!_sounds) {
+            throw std::runtime_error("Cannot allocate memory!");
+        }
+        std::copy(sounds, sounds + sound_count, _sounds);
+
+        _length = 0;
+        for (size_t i = 0; i < sound_count; ++i) {
+            if (sounds[i]->length() > _length) {
+                _length = sounds[i]->length();
+            }
+        }
+    };
+
+    ~Mix() override {
+        delete[] _sounds;
+    };
+
+    T operator[](size_t i) const override {
+        T sum = 0;
+        for (size_t j = 0; j < _sound_count; ++j) {
+            if (i < _sounds[j]->length()) {
+                sum += (*_sounds[j])[i];
+            }
+        }
+        T value = sum / static_cast<T>(_sound_count);
+
+        if (value < -M) {
+            return -M;
+        }
+        if (value > M) {
+            return M;
+        }
+        return value;
+    };
+
+    size_t length() const override {
+        return _length;
+    };
+
+private:
+    Sound<T, M> **_sounds;
+    size_t _sound_count;
+    size_t _length;
+};
+
+#endif //OOPTEST_MIX_H
+```
+```Sequence.h
+#ifndef OOPTEST_SEQUENCE_H
+#define OOPTEST_SEQUENCE_H
+
+#include "Sound.h"
+
+template<typename T, T M>
+class Sequence : public Sound<T, M> {
+public:
+    Sequence(Sound<T, M> *const *sounds, size_t sound_count) : _sounds(new(std::nothrow) Sound<T, M> *[sound_count]),
+                                                               _sound_count(sound_count),
+                                                               _lengths(new(std::nothrow) size_t[sound_count]) {
+        if (!_sounds || !_lengths) {
+            throw std::runtime_error("Cannot allocate memory!");
+        }
+        std::copy(sounds, sounds + sound_count, _sounds);
+
+        _length = 0;
+        for (size_t i = 0; i < sound_count; ++i) {
+            _lengths[i] = sounds[i]->length();
+            _length += _lengths[i];
+        }
+    }
+
+    ~Sequence() override {
+        delete[] _sounds;
+        delete[] _lengths;
+    };
+
+    T operator[](size_t i) const override {
+        for (size_t j = 0; j < _sound_count; ++j) {
+            if (i < _lengths[j]) {
+                return (*_sounds[j])[i];
+            } else {
+                i -= _lengths[j];
+            }
+        }
+        throw std::out_of_range("Index out of range!");
+    };
+
+    size_t length() const override {
+        return _length;
+    };
+
+private:
+    Sound<T, M> **_sounds;
+    size_t _sound_count;
+    size_t _length;
+    size_t *_lengths;
+};
+
+#endif //OOPTEST_SEQUENCE_H
+```
+```Effect.h
+#ifndef OOPTEST_EFFECT_H
+#define OOPTEST_EFFECT_H
+
+#include <functional>
+#include "Sound.h"
+
+template<typename T, T M>
+class Effect : public Sound<T, M> {
+public:
+    using TransformFunc = std::function<T(const T&, size_t)>;
+
+    Effect(Sound<T, M> *sound, TransformFunc transformation) : _sound(sound), _transformation(transformation) {
+    };
+
+    T operator[](size_t i) const override {
+        T sample = (*_sound)[i];
+        T transformed_sample = _transformation(sample, i);
+
+        if (transformed_sample > M) {
+            return M;
+        } else if (transformed_sample < -M) {
+            return -M;
+        }
+        return transformed_sample;
+    };
+
+    size_t length() const override {
+        return _sound->length();
+    };
+
+private:
+    Sound<T, M> *_sound;
+    TransformFunc _transformation;
+};
+
+#endif //OOPTEST_EFFECT_H
+```
+```Playlist.h
+#ifndef OOPTEST_PLAYLIST_H
+#define OOPTEST_PLAYLIST_H
+
+#include "../include/Effect.h"
+#include "../include/Silence.h"
+#include "../include/SoundFromFile.h"
+
+template<typename T, T M>
+class Playlist {
+public:
+    Playlist(const char *filename) : _sounds(nullptr), _size(0), _capacity(0) {
+        std::ifstream infile(filename);
+        char line[1000];
+        while (infile.getline(line, sizeof(line))) {
+            parseLine(line);
+        }
+    };
+
+    ~Playlist() {
+        for (size_t i = 0; i < _size; i++) {
+            delete _sounds[i];
+        }
+        delete[] _sounds;
+    };
+
+    const Sound<T, M> &operator[](size_t i) const {
+        if (i >= _size) {
+            throw std::out_of_range("Invalid index");
+        }
+        return *_sounds[i];
+    };
+
+    operator Sound<T, M>() {
+        size_t totalSize = 0;
+        for (size_t i = 0; i < _size; i++) {
+            totalSize += _sounds[i]->getLength();
+        }
+
+        T *data = new T[totalSize];
+        size_t currentIndex = 0;
+
+        for (size_t i = 0; i < _size; i++) {
+            T *currentSoundData = _sounds[i]->getData();
+            size_t currentSoundLength = _sounds[i]->getLength();
+
+            for (size_t j = 0; j < currentSoundLength; j++) {
+                data[currentIndex++] = currentSoundData[j];
+            }
+        }
+
+        return Sound<T, M>(data, totalSize);
+    };
+
+    void saveToBinaryFile(const char *filename) const {
+        std::ofstream outfile(filename, std::ios::binary);
+        for (size_t i = 0; i < _size; i++) {
+            outfile.write(reinterpret_cast<const char *>(&_sounds[i]), sizeof(_sounds[i]));
+        }
+    };
+
+    size_t size() const {
+        return _size;
+    }
+
+private:
+    void parseLine(char *line) {
+        char *type = std::strtok(line, " ");
+
+        Sound<T, M> *newSound = nullptr;
+
+        if (strcmp(type, "Sound") == 0) {
+            char *songfile = std::strtok(nullptr, " ");
+            T amp = atof(std::strtok(nullptr, " "));
+            newSound = new Effect<T, M>(new SoundFromFile<T, M>(songfile),
+                                        [=](const T &sample, size_t) { return sample * amp; });
+
+        } else if (strcmp(type, "Pause") == 0) {
+            size_t duration = atoi(std::strtok(nullptr, " "));
+            newSound = new Silence<T, M>(duration);
+
+        } else if (strcmp(type, "FadeInSong") == 0) {
+            char *songfile = std::strtok(nullptr, " ");
+            size_t fadeDuration = atoi(std::strtok(nullptr, " "));
+            T finalLevel = atof(std::strtok(nullptr, " "));
+            newSound = new Effect<T, M>(new SoundFromFile<T, M>(songfile), [=](const T &sample, size_t i) {
+                return sample * (i < fadeDuration ? finalLevel * i / fadeDuration : finalLevel);
+            });
+
+        } else {
+            throw std::runtime_error("Invalid sound type in playlist");
+        }
+
+        if (_size >= _capacity) {
+            size_t newCapacity = _capacity == 0 ? 1 : _capacity * 2;
+            Sound<T, M> **newSounds = new Sound<T, M> *[newCapacity];
+            for (size_t i = 0; i < _size; i++) {
+                newSounds[i] = _sounds[i];
+            }
+            delete[] _sounds;
+            _sounds = newSounds;
+            _capacity = newCapacity;
+        }
+
+        _sounds[_size++] = newSound;
+    };
+
+    Sound<T, M> **_sounds;
+    size_t _size;
+    size_t _capacity;
+};
+
+#endif //OOPTEST_PLAYLIST_H
+```
+```main.cpp
+#include "Playlist/Playlist.h"
+
+void createBinaryFileFromSound() {
+    const size_t size = 100;
+    float samples[size];
+    for (size_t i = 0; i < size; ++i) {
+        samples[i] = (float) i;
+    }
+    SoundFromFile<float, 1> sound(samples, size);
+    Save(sound, "test_sound.bin");
+}
+
+int main() {
+    createBinaryFileFromSound();
+
+    Playlist<float, 1> myPlaylist("playlist.txt");
+
+    for(size_t i = 0; i < myPlaylist.size(); ++i) {
+        std::cout << "Sound " << i << " length: " << myPlaylist[i].length() << std::endl;
+    }
+
+    myPlaylist.saveToBinaryFile("playlist.bin");
+
+    return 0;
+}
+```

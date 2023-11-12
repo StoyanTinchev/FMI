@@ -1,0 +1,238 @@
+
+template/src/expression-lib/expression.h:
+-------------------------
+#pragma once
+
+#include <istream>
+#include <exception>
+#include <stack>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <cctype>
+
+struct Operation {
+    char symbol;
+    char operation; // '+', '-', '*', or '/'
+    int priority;
+    char associativity; // 'L' or 'R'
+};
+
+class OperationSet {
+private:
+    std::vector<Operation> operations;
+
+public:
+    void addOperation(const Operation &op);
+
+    const Operation *getOperation(char symbol) const;
+};
+
+// An exception that is thrown by evaluate when it detects an incorrect expression
+class incorrect_expression : public std::invalid_argument {
+public:
+    incorrect_expression(const std::string &what_arg)
+            : invalid_argument(what_arg) {
+        // Nothing to do here        
+    }
+};
+
+double evaluate(const char *expression, std::istream &ops);
+
+-------------------------
+
+
+template/src/expression-lib/infix_to_postfix_converter.h:
+-------------------------
+#pragma once
+
+#include <string>
+#include <stack>
+#include "expression.h"
+
+class InfixToPostfixConverter {
+public:
+    static std::vector<std::string> convert(const std::vector<std::string>& tokens, const OperationSet& opSet);
+
+private:
+    static bool hasHigherPrecedence(const std::string& op1, const std::string& op2, const OperationSet& opSet);
+};
+
+-------------------------
+
+
+template/src/expression-lib/infix_to_postfix_converter.cpp:
+-------------------------
+#include "infix_to_postfix_converter.h"
+
+std::vector<std::string>
+InfixToPostfixConverter::convert(const std::vector<std::string> &tokens, const OperationSet &opSet) {
+    std::stack<std::string> stack;
+    std::vector<std::string> postfix;
+
+    for (const auto &token: tokens) {
+        if (isdigit(token[0]) || (token[0] == '-' && token.size() > 1)) {
+            postfix.push_back(token);
+        } else if (token == "(") {
+            stack.push(token);
+        } else if (token == ")") {
+            while (!stack.empty() && stack.top() != "(") {
+                postfix.push_back(stack.top());
+                stack.pop();
+            }
+            if (!stack.empty()) {
+                stack.pop();
+            } else {
+                throw incorrect_expression("Mismatched parentheses");
+            }
+        } else {
+            while (!stack.empty() && stack.top() != "(" &&
+                   hasHigherPrecedence(stack.top(), token, opSet)) {
+                postfix.push_back(stack.top());
+                stack.pop();
+            }
+            stack.push(token);
+        }
+    }
+
+    while (!stack.empty()) {
+        if (stack.top() == "(") {
+            throw incorrect_expression("Mismatched parentheses");
+        }
+        postfix.push_back(stack.top());
+        stack.pop();
+    }
+
+    return postfix;
+}
+
+bool
+InfixToPostfixConverter::hasHigherPrecedence(const std::string &op1, const std::string &op2,
+                                             const OperationSet &opSet) {
+    const Operation *operation1 = opSet.getOperation(op1[0]);
+    const Operation *operation2 = opSet.getOperation(op2[0]);
+
+    if (!operation1 || !operation2) {
+        throw incorrect_expression("Unknown operation");
+    }
+
+    if (operation1->priority == operation2->priority) {
+        return operation1->associativity == 'L';
+    }
+
+    return operation1->priority > operation2->priority;
+}
+
+-------------------------
+
+
+template/src/expression-lib/expression.cpp:
+-------------------------
+#include "expression.h"
+#include "infix_to_postfix_converter.h"
+
+void OperationSet::addOperation(const Operation &op) {
+    operations.push_back(op);
+}
+
+const Operation *OperationSet::getOperation(char symbol) const {
+    for (const auto &op: operations) {
+        if (op.symbol == symbol) {
+            return &op;
+        }
+    }
+    return nullptr; // Operation not found
+}
+
+void initializeOperationSet(OperationSet &opSet, std::istream &ops) {
+    std::string line;
+    while (std::getline(ops, line)) {
+        std::istringstream lineStream(line);
+        Operation op = {};
+        lineStream >> op.symbol >> op.operation >> op.priority >> op.associativity;
+        opSet.addOperation(op);
+    }
+}
+
+std::vector<std::string> tokenize(const std::string &str) {
+    std::vector<std::string> tokens;
+    std::istringstream iss(str);
+    std::string token;
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+double performOperation(double operand1, double operand2, char operation) {
+    switch (operation) {
+        case '+':
+            return operand1 + operand2;
+        case '-':
+            return operand1 - operand2;
+        case '*':
+            return operand1 * operand2;
+        case '/':
+            if (operand2 == 0) throw incorrect_expression("Division by zero");
+            return operand1 / operand2;
+        default:
+            throw incorrect_expression("Unknown operation");
+    }
+}
+
+double evaluatePostfix(const std::vector<std::string> &postfix, const OperationSet &opSet) {
+    std::stack<double> stack;
+
+    for (const auto &token: postfix) {
+        if (isdigit(token[0]) || (token[0] == '-' && token.size() > 1)) {
+            stack.push(std::stod(token));
+        } else {
+            if (stack.size() < 2) throw incorrect_expression("Insufficient operands");
+            double operand2 = stack.top();
+            stack.pop();
+            double operand1 = stack.top();
+            stack.pop();
+
+            const Operation *op = opSet.getOperation(token[0]);
+            if (!op) throw incorrect_expression("Unknown operation");
+
+            double result = performOperation(operand1, operand2, op->operation);
+            stack.push(result);
+        }
+    }
+
+    if (stack.size() != 1) throw incorrect_expression("Incorrect expression");
+    return stack.top();
+}
+
+///
+/// @brief Evaluates an expression.
+///
+/// @param expression
+///   A null-terminated string that contains the expression.
+/// @param ops
+///   An input stream which contains the descriptions of all operations used in the expression.
+///
+/// @return The calculated value of the expression
+///
+double evaluate(const char *expression, std::istream &ops) {
+    if (expression == nullptr) {
+        throw incorrect_expression("Expression is null");
+    }
+
+    std::string exprStr = expression;
+    if (exprStr.find_first_not_of(" \t\n\v\f\r") == std::string::npos) {
+        return 0.0;
+    }
+
+    OperationSet opSet;
+    initializeOperationSet(opSet, ops);
+
+    std::vector<std::string> tokens = tokenize(expression);
+    std::vector<std::string> postfix = InfixToPostfixConverter::convert(tokens, opSet);
+
+    return evaluatePostfix(postfix, opSet);
+}
+
+-------------------------
+
