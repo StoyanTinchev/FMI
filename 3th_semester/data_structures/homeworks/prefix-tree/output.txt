@@ -1,0 +1,20 @@
+Loading dictionary from ../../sample-inputs/dictionary.txt...
+ERROR: incorrect entry "This is an incorrect entry, it has spaces." on line 8
+ERROR: incorrect entry " spaceOnTheLeft" on line 9
+ERROR: incorrect entry "spaceOnTheRight " on line 10
+ERROR: incorrect entry "an0ther1ncorrectW0rd" on line 11
+
+Removing the words listed at ../../sample-inputs/filter.txt...
+ERROR: incorrect entry "1234567890" on line 3
+
+Verifying the contents of ../../sample-inputs/text.txt...
+SPELLING ERROR: "abc" on line 1
+SPELLING ERROR: "abbcd" on line 1
+SPELLING ERROR: "xyz" on line 1
+SPELLING ERROR: "an0ther1ncorrectW0rd" on line 2
+
+Statistics:
+    Dictionary entries: 7 correct, 4 incorrect
+        Filter entries: 2 correct, 1 incorrect
+  Resultant dictionary: 6
+         Words in text: 2 correct, 4 incorrect

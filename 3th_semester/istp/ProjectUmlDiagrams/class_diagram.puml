@@ -1,0 +1,44 @@
+@startuml
+class Applicant {
+    +String name
+    +String contactDetails
+}
+
+class Application {
+    +String applicationId
+    +String applicantDetails
+    +String serviceDetails
+    +Date submissionDate
+}
+
+class DrugAdministrationAgency {
+    +String agencyName
+    +String contactInfo
+    +processApplication(Application)
+}
+
+class Registry {
+    +String registryId
+    +String registeredServices
+    +register(Applicant, Application)
+}
+
+class AdministrativeAct {
+    +String actId
+    +String details
+    +Date issueDate
+    +boolean isValid
+}
+
+class ControlAuthority {
+    +String authorityName
+    +String jurisdiction
+    +audit(Registry)
+}
+
+Applicant --> Application : appliesWith
+Application --> DrugAdministrationAgency : submittedTo
+DrugAdministrationAgency --> AdministrativeAct : issues
+Application .right.> Registry : registeredIn
+Registry --> ControlAuthority : auditedBy
+@enduml
